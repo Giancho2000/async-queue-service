@@ -1,0 +1,54 @@
+enum JobType {
+  TEST
+  EMAIL
+  REPORT
+}
+
+enum JobStatus {
+  PENDING   // creado, esta en cola
+  PROCESSING  // el Worker lo esta ejecutando
+  COMPLETED  // todo termino ok
+  FAILED // agoto los re-intentos
+  CANCELLED // cancelado antes de ejecutarlo
+}
+
+enum JobPriority {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Job {
+  id        String        @id @default(uuid())
+  type      JobType
+  status    JobStatus     @default(PENDING)
+  priority  JobPriority   @default(MEDIUM)
+
+  payload   Json
+  result    Json?
+  error     String?
+
+  attempts    Int   @default(0)   // INtentos ejecutados
+  maxAttempts Int   @default(4)   // Cantidad de intentos disponibles
+
+  scheduledAt DateTime?
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([status])
+  @@index([type])
+  @@index([status, priority])
+  @@map("jobs")
+}
