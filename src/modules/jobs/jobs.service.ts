@@ -18,4 +18,10 @@ export class JobsService {
       select: { id: true, status: true },
     });
   }
+
+  async getJobs() {
+    return this.prisma.job.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+  }
 }
