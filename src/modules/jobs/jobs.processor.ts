@@ -15,8 +15,17 @@ export class JobsProcessor extends WorkerHost {
     // 1. register status in PROCESSING and when it started.
     await this.prisma.job.update({
       where: { id: job.id },
-      data: { status: JobStatus.PROCESSING, startedAt: new Date() },
+      data: {
+        status: JobStatus.PROCESSING,
+        startedAt: new Date(),
+        attempts: job.attemptsMade + 1,
+      },
     });
+
+    // Aca podemos comprobar los intentos desde consola
+    /*     console.log(
+      `van ${job.attemptsMade} intentos y empezamos con ${job.attemptsStarted}`,
+    ); */
 
     // 2. execute logic based in type
     const result = await this.handle(job);
