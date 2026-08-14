@@ -25,4 +25,8 @@ export const envValidationSchema = Joi.object({
   REDIS_PASSWORD: Joi.string().required(),
   REDIS_HOST: Joi.string().default('localhost'),
   REDIS_PORT: Joi.number().port().default(6379),
+
+  //Queue attempts
+  QUEUE_MAX_ATTEMPTS: Joi.number().integer().min(1).default(3),
+  QUEUE_BACKOFF_DELAY: Joi.number().integer().min(0).default(5000),
 });

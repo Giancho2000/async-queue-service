@@ -4,21 +4,27 @@ import { CreateJobDto } from './dto/create-job.dto';
 import { JobPriority, Prisma } from 'src/generated/prisma/client';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class JobsService {
   constructor(
     private readonly prisma: PrismaService,
     @InjectQueue('jobs') private readonly jobsQueue: Queue,
+    private readonly config: ConfigService,
   ) {}
 
   // create a new job and add in the queue
   async create(dto: CreateJobDto) {
+    const maxAttempts = this.config.getOrThrow<number>('QUEUE_MAX_ATTEMPTS');
+    const backOfDelay = this.config.getOrThrow<number>('QUEUE_BACKOFF_DELAY');
+
     const job = await this.prisma.job.create({
       data: {
         type: dto.type,
         payload: dto.payload as Prisma.InputJsonValue,
         priority: dto.priority,
+        maxAttempts,
         scheduledAt: dto.scheduledAt ? new Date(dto.scheduledAt) : undefined,
       },
       select: {
@@ -27,14 +33,15 @@ export class JobsService {
         type: true,
         payload: true,
         priority: true,
+        maxAttempts: true,
       },
     });
 
     await this.jobsQueue.add(job.type, job.payload, {
       jobId: job.id,
       priority: this.mapPriority(job.priority),
-      attempts: 4,
-      backoff: { type: 'exponential', delay: 5000 },
+      attempts: maxAttempts,
+      backoff: { type: 'exponential', delay: backOfDelay },
     });
 
     return { id: job.id, status: job.status };
