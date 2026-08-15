@@ -10,6 +10,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { BullBoardModule } from '@bull-board/nestjs';
 import { ExpressAdapter } from '@bull-board/express';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
+import { QueueModule } from './modules/queue/queue.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -41,6 +42,7 @@ import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
     PrismaModule,
     JobsModule,
     ScheduleModule.forRoot(),
+    QueueModule,
   ],
   controllers: [AppController],
   providers: [AppService],

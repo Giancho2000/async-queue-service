@@ -29,11 +29,6 @@ export class JobsController {
     return this.jobService.getJob(id);
   }
 
-  @Get('queue/stats')
-  getStats() {
-    return this.jobService.getStats();
-  }
-
   @Delete(':id')
   cancel(@Param('id', ParseUUIDPipe) id: string) {
     return this.jobService.cancel(id);

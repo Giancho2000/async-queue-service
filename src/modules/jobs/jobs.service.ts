@@ -101,16 +101,6 @@ export class JobsService {
     });
   }
 
-  async getStats() {
-    const counts = await this.jobsQueue.getJobCounts(
-      'active',
-      'waiting',
-      'completed',
-      'failed',
-      'delayed',
-    );
-    return counts;
-  }
   // daily job to clear old jobs
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async cleanOldJobs() {
