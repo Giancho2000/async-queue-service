@@ -10,6 +10,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { JobPriority, JobStatus, Prisma } from 'src/generated/prisma/client';
 import { CreateJobDto } from './dto/create-job.dto';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { QueryJobsDto } from './dto/query-jobs.dto';
 
 @Injectable()
 export class JobsService {
@@ -68,10 +69,37 @@ export class JobsService {
   }
 
   // Get all jobs
-  async getJobs() {
-    return this.prisma.job.findMany({
+  async getJobs(query: QueryJobsDto) {
+    const limit = query.limit ?? 20;
+
+    const where: Prisma.JobWhereInput = {
+      status: query.status,
+      type: query.type,
+      priority: query.priority,
+      createdAt:
+        query.from || query.to
+          ? {
+              gte: query.from ? new Date(query.from) : undefined,
+              lt: query.to ? new Date(query.to) : undefined,
+            }
+          : undefined,
+    };
+
+    const jobs = await this.prisma.job.findMany({
+      where,
+      take: limit + 1,
+      ...(query.cursor && {
+        cursor: { id: query.cursor },
+        skip: 1,
+      }),
       orderBy: { createdAt: 'desc' },
     });
+
+    const hasNext = jobs.length > limit;
+    const items = hasNext ? jobs.slice(0, limit) : jobs;
+    const nextCursor = hasNext ? items[items.length - 1].id : null;
+
+    return { items, nextCursor };
   }
 
   // get Job by id

@@ -6,9 +6,11 @@ import {
   Post,
   ParseUUIDPipe,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { CreateJobDto } from './dto/create-job.dto';
 import { JobsService } from './jobs.service';
+import { QueryJobsDto } from './dto/query-jobs.dto';
 
 @Controller('jobs')
 export class JobsController {
@@ -20,8 +22,8 @@ export class JobsController {
   }
 
   @Get()
-  get() {
-    return this.jobService.getJobs();
+  get(@Query() query: QueryJobsDto) {
+    return this.jobService.getJobs(query);
   }
 
   @Get(':id')
