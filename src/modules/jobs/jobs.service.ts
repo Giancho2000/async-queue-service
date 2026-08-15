@@ -92,7 +92,7 @@ export class JobsService {
         cursor: { id: query.cursor },
         skip: 1,
       }),
-      orderBy: { createdAt: 'desc' },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
     });
 
     const hasNext = jobs.length > limit;
@@ -115,7 +115,7 @@ export class JobsService {
   async cancel(id: string) {
     const job = await this.getJob(id);
 
-    if (job.status !== 'PENDING') {
+    if (job.status !== JobStatus.PENDING) {
       throw new ConflictException(
         `Only PENDING jobs can be cancelled. Current status ${job.status}`,
       );
@@ -150,7 +150,7 @@ export class JobsService {
       });
     }
 
-    await this.prisma.job.update({
+    return this.prisma.job.update({
       where: { id },
       data: {
         status: JobStatus.PENDING,
