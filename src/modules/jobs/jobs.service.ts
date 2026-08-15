@@ -129,6 +129,38 @@ export class JobsService {
     });
   }
 
+  // Retry a failed job
+  async retry(id: string) {
+    const job = await this.getJob(id);
+    if (job.status !== JobStatus.FAILED) {
+      throw new ConflictException(
+        `Only FAILED jobs can be retried. Current status: ${job.status}`,
+      );
+    }
+
+    // retrying job
+    const bullJob = await this.jobsQueue.getJob(id);
+    if (bullJob) {
+      await bullJob.retry();
+    } else {
+      await this.jobsQueue.add(job.type, job.payload, {
+        jobId: id,
+        priority: this.mapPriority(job.priority),
+        attempts: job.maxAttempts,
+      });
+    }
+
+    await this.prisma.job.update({
+      where: { id },
+      data: {
+        status: JobStatus.PENDING,
+        error: null,
+        startedAt: null,
+        completedAt: null,
+      },
+    });
+  }
+
   // daily job to clear old jobs
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async cleanOldJobs() {

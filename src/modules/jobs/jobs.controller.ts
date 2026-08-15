@@ -7,6 +7,8 @@ import {
   ParseUUIDPipe,
   Delete,
   Query,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { CreateJobDto } from './dto/create-job.dto';
 import { JobsService } from './jobs.service';
@@ -34,5 +36,11 @@ export class JobsController {
   @Delete(':id')
   cancel(@Param('id', ParseUUIDPipe) id: string) {
     return this.jobService.cancel(id);
+  }
+
+  @Post(':id/retry')
+  @HttpCode(HttpStatus.OK)
+  retry(@Param('id', ParseUUIDPipe) id: string) {
+    return this.jobService.retry(id);
   }
 }
