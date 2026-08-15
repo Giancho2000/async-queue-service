@@ -1,13 +1,29 @@
 import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { Prisma } from 'src/generated/prisma/client';
-import { JobStatus } from 'src/generated/prisma/enums';
+import { JobStatus, JobType } from 'src/generated/prisma/enums';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { JobHandler } from './handlers/jobs-handler.interface';
+import { TestHandler } from './handlers/test.handler';
+import { EmailHandler } from './handlers/email.handler';
+import { ReportHandler } from './handlers/report.handler';
 
 @Processor('jobs')
 export class JobsProcessor extends WorkerHost {
-  constructor(private readonly prisma: PrismaService) {
+  private readonly handlers: Record<JobType, JobHandler>;
+
+  constructor(
+    private readonly prisma: PrismaService,
+    testHandler: TestHandler,
+    emailHandler: EmailHandler,
+    reportHandler: ReportHandler,
+  ) {
     super();
+    this.handlers = {
+      TEST: testHandler,
+      EMAIL: emailHandler,
+      REPORT: reportHandler,
+    };
   }
 
   // This process will be execute by each job in queue.
@@ -22,13 +38,14 @@ export class JobsProcessor extends WorkerHost {
       },
     });
 
-    // Aca podemos comprobar los intentos desde consola
-    /*     console.log(
-      `van ${job.attemptsMade} intentos y empezamos con ${job.attemptsStarted}`,
-    ); */
+    // Validate JobType
+    const handler = this.handlers[job.name as JobType];
+    if (!handler) {
+      throw new Error(`${job.name} is no a support job type.`);
+    }
 
     // 2. execute logic based in type
-    const result = await this.handle(job);
+    const result = await handler.handle(job);
 
     // 3. Mark job as COMPLETED, result and update date
 
@@ -43,17 +60,6 @@ export class JobsProcessor extends WorkerHost {
 
     // BullMQ saved this as returnValue of job
     return result;
-  }
-
-  // Handler by jobType
-  private async handle(job: Job): Promise<unknown> {
-    switch (job.name) {
-      case 'TEST':
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-        return { ok: true };
-      default:
-        throw new Error(`Job Type is not support: ${job.name}`);
-    }
   }
 
   // If process return an error
