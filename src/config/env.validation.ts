@@ -29,4 +29,8 @@ export const envValidationSchema = Joi.object({
   //Queue attempts
   QUEUE_MAX_ATTEMPTS: Joi.number().integer().min(1).default(3),
   QUEUE_BACKOFF_DELAY: Joi.number().integer().min(0).default(5000),
+
+  //BULL BOARD
+  BULL_BOARD_USER: Joi.string().required(),
+  BULL_BOARD_PASS: Joi.string().required(),
 });

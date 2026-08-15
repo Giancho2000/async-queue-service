@@ -7,7 +7,10 @@ import { PrismaModule } from './prisma/prisma.module';
 import { JobsModule } from './modules/jobs/jobs.module';
 import { BullModule } from '@nestjs/bullmq';
 import { ScheduleModule } from '@nestjs/schedule';
-
+import { BullBoardModule } from '@bull-board/nestjs';
+import { ExpressAdapter } from '@bull-board/express';
+import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
+import { QueueModule } from './modules/queue/queue.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -28,9 +31,18 @@ import { ScheduleModule } from '@nestjs/schedule';
         },
       }),
     }),
+    BullBoardModule.forRoot({
+      route: '/queue/board',
+      adapter: ExpressAdapter,
+    }),
+    BullBoardModule.forFeature({
+      name: 'jobs',
+      adapter: BullMQAdapter,
+    }),
     PrismaModule,
     JobsModule,
     ScheduleModule.forRoot(),
+    QueueModule,
   ],
   controllers: [AppController],
   providers: [AppService],
