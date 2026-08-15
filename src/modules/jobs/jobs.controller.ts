@@ -5,6 +5,7 @@ import {
   Param,
   Post,
   ParseUUIDPipe,
+  Delete,
 } from '@nestjs/common';
 import { CreateJobDto } from './dto/create-job.dto';
 import { JobsService } from './jobs.service';
@@ -26,5 +27,10 @@ export class JobsController {
   @Get(':id')
   getOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.jobService.getJob(id);
+  }
+
+  @Delete(':id')
+  cancel(@Param('id', ParseUUIDPipe) id: string) {
+    return this.jobService.cancel(id);
   }
 }
