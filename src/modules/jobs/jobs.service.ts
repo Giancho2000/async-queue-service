@@ -87,7 +87,7 @@ export class JobsService {
   async cancel(id: string) {
     const job = await this.getJob(id);
 
-    if (job.status != 'PENDING') {
+    if (job.status !== 'PENDING') {
       throw new ConflictException(
         `Only PENDING jobs can be cancelled. Current status ${job.status}`,
       );
@@ -95,19 +95,30 @@ export class JobsService {
 
     await this.jobsQueue.remove(id);
 
-    await this.prisma.job.update({
+    return this.prisma.job.update({
       where: { id },
       data: { status: JobStatus.CANCELLED },
     });
   }
 
+  async getStats() {
+    const counts = await this.jobsQueue.getJobCounts(
+      'active',
+      'waiting',
+      'completed',
+      'failed',
+      'delayed',
+    );
+    return counts;
+  }
+  // daily job to clear old jobs
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async cleanOldJobs() {
     const cutOff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     await this.prisma.job.deleteMany({
       where: {
         status: { in: [JobStatus.COMPLETED, JobStatus.CANCELLED] },
-        completedAt: { lt: cutOff },
+        updatedAt: { lt: cutOff },
       },
     });
   }
