@@ -10,6 +10,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { JobPriority, JobStatus, Prisma } from 'src/generated/prisma/client';
 import { CreateJobDto } from './dto/create-job.dto';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { QueryJobsDto } from './dto/query-jobs.dto';
 
 @Injectable()
 export class JobsService {
@@ -68,10 +69,37 @@ export class JobsService {
   }
 
   // Get all jobs
-  async getJobs() {
-    return this.prisma.job.findMany({
-      orderBy: { createdAt: 'desc' },
+  async getJobs(query: QueryJobsDto) {
+    const limit = query.limit ?? 20;
+
+    const where: Prisma.JobWhereInput = {
+      status: query.status,
+      type: query.type,
+      priority: query.priority,
+      createdAt:
+        query.from || query.to
+          ? {
+              gte: query.from ? new Date(query.from) : undefined,
+              lt: query.to ? new Date(query.to) : undefined,
+            }
+          : undefined,
+    };
+
+    const jobs = await this.prisma.job.findMany({
+      where,
+      take: limit + 1,
+      ...(query.cursor && {
+        cursor: { id: query.cursor },
+        skip: 1,
+      }),
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
     });
+
+    const hasNext = jobs.length > limit;
+    const items = hasNext ? jobs.slice(0, limit) : jobs;
+    const nextCursor = hasNext ? items[items.length - 1].id : null;
+
+    return { items, nextCursor };
   }
 
   // get Job by id
@@ -87,7 +115,7 @@ export class JobsService {
   async cancel(id: string) {
     const job = await this.getJob(id);
 
-    if (job.status != 'PENDING') {
+    if (job.status !== JobStatus.PENDING) {
       throw new ConflictException(
         `Only PENDING jobs can be cancelled. Current status ${job.status}`,
       );
@@ -95,19 +123,52 @@ export class JobsService {
 
     await this.jobsQueue.remove(id);
 
-    await this.prisma.job.update({
+    return this.prisma.job.update({
       where: { id },
       data: { status: JobStatus.CANCELLED },
     });
   }
 
+  // Retry a failed job
+  async retry(id: string) {
+    const job = await this.getJob(id);
+    if (job.status !== JobStatus.FAILED) {
+      throw new ConflictException(
+        `Only FAILED jobs can be retried. Current status: ${job.status}`,
+      );
+    }
+
+    // retrying job
+    const bullJob = await this.jobsQueue.getJob(id);
+    if (bullJob) {
+      await bullJob.retry();
+    } else {
+      await this.jobsQueue.add(job.type, job.payload, {
+        jobId: id,
+        priority: this.mapPriority(job.priority),
+        attempts: job.maxAttempts,
+      });
+    }
+
+    return this.prisma.job.update({
+      where: { id },
+      data: {
+        status: JobStatus.PENDING,
+        error: null,
+        startedAt: null,
+        completedAt: null,
+      },
+    });
+  }
+
+  // daily job to clear old jobs
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async cleanOldJobs() {
     const cutOff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     await this.prisma.job.deleteMany({
       where: {
         status: { in: [JobStatus.COMPLETED, JobStatus.CANCELLED] },
-        completedAt: { lt: cutOff },
+        updatedAt: { lt: cutOff },
       },
     });
   }
