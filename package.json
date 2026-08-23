@@ -97,14 +97,30 @@
       "json",
       "ts"
     ],
+    "moduleNameMapper": {
+      "^src/(.*)$": "<rootDir>/$1",
+      "^(\\.{1,2}/.*)\\.js$": "$1"
+    },
     "rootDir": "src",
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },
     "collectCoverageFrom": [
-      "**/*.(t|j)s"
+      "modules/**/*.ts",
+      "!modules/**/*.module.ts",
+      "!modules/**/dto/**",
+      "!modules/**/*.spec.ts",
+      "!modules/**/email.handler.ts"
     ],
+    "coverageThreshold": {
+      "global": {
+        "statements": 70,
+        "lines": 70,
+        "functions": 70,
+        "branches": 55
+      }
+    },
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
   }
