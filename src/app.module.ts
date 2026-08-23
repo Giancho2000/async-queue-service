@@ -11,6 +11,9 @@ import { BullBoardModule } from '@bull-board/nestjs';
 import { ExpressAdapter } from '@bull-board/express';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 import { QueueModule } from './modules/queue/queue.module';
+import { APP_FILTER } from '@nestjs/core';
+import { AllExceptionFilter } from './common/filters/all-exceptions.filter';
+import { LoggerModule } from 'nestjs-pino';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -43,8 +46,21 @@ import { QueueModule } from './modules/queue/queue.module';
     JobsModule,
     ScheduleModule.forRoot(),
     QueueModule,
+    LoggerModule.forRoot({
+      pinoHttp: {
+        autoLogging: true,
+        level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
+        transport:
+          process.env.NOVE_ENV !== 'production'
+            ? { target: 'pino-pretty', options: { singleLine: true } }
+            : undefined,
+      },
+    }),
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    { provide: APP_FILTER, useClass: AllExceptionFilter },
+  ],
 })
 export class AppModule {}
