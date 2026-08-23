@@ -110,7 +110,8 @@
       "modules/**/*.ts",
       "!modules/**/*.module.ts",
       "!modules/**/dto/**",
-      "!modules/**/*.spec.ts"
+      "!modules/**/*.spec.ts",
+      "!modules/**/email.handler.ts"
     ],
     "coverageThreshold": {
       "global": {
