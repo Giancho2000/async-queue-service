@@ -4,13 +4,14 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import expressBasicAuth from 'express-basic-auth';
 import { Logger } from 'nestjs-pino';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
 
   app.useLogger(app.get(Logger));
 
-  // Cierra conexiones (Prisma, colas) limpio al recibir SIGTERM/SIGINT.
+  // Close connections (Prisma, queues) cleanly on SIGTERM/SIGINT.
   app.enableShutdownHooks();
   app.useGlobalPipes(
     new ValidationPipe({
@@ -30,6 +31,16 @@ async function bootstrap() {
       },
     }),
   );
+
+  // swagger
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('Async Queue Service')
+    .setDescription('Async process jobs queue with BullMQ & redis')
+    .setVersion('1.0')
+    .build();
+
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
+  SwaggerModule.setup('docs', app, document);
   await app.listen(port);
 }
 void bootstrap();

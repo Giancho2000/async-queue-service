@@ -5,11 +5,11 @@ enum JobType {
 }
 
 enum JobStatus {
-  PENDING   // creado, esta en cola
-  PROCESSING  // el Worker lo esta ejecutando
-  COMPLETED  // todo termino ok
-  FAILED // agoto los re-intentos
-  CANCELLED // cancelado antes de ejecutarlo
+  PENDING   // created, waiting in the queue
+  PROCESSING  // the Worker is executing it
+  COMPLETED  // finished OK
+  FAILED // ran out of retries
+  CANCELLED // cancelled before execution
 }
 
 enum JobPriority {
@@ -39,8 +39,8 @@ model Job {
   result    Json?
   error     String?
 
-  attempts    Int   @default(0)   // INtentos ejecutados
-  maxAttempts Int   @default(4)   // Cantidad de intentos disponibles
+  attempts    Int   @default(0)   // attempts already executed
+  maxAttempts Int   @default(4)   // max attempts allowed
 
   scheduledAt DateTime?
   startedAt   DateTime?
