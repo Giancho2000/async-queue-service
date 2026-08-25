@@ -11,7 +11,7 @@ async function bootstrap() {
 
   app.useLogger(app.get(Logger));
 
-  // Cierra conexiones (Prisma, colas) limpio al recibir SIGTERM/SIGINT.
+  // Close connections (Prisma, queues) cleanly on SIGTERM/SIGINT.
   app.enableShutdownHooks();
   app.useGlobalPipes(
     new ValidationPipe({

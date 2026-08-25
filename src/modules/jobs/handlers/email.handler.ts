@@ -15,7 +15,7 @@ export class EmailHandler implements JobHandler {
 
   async handle(job: Job): Promise<unknown> {
     const { to, subject, body } = job.data as EmailPayload;
-    //This account just simulate de emails in url.
+    // This test account only simulates emails and returns a preview URL.
     const testAccountEmail = await nodemailer.createTestAccount();
     const transporter = nodemailer.createTransport({
       host: 'smtp.ethereal.email',

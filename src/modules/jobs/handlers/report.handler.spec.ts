@@ -2,7 +2,7 @@ import { Job } from 'bullmq';
 import { ReportHandler } from './report.handler';
 
 describe('ReportHandler', () => {
-  const handler = new ReportHandler(); // sin dependencias
+  const handler = new ReportHandler(); // no dependencies
 
   it('genera un CSV en base64 desde payload.rows', async () => {
     const job = {
