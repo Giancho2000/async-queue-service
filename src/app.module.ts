@@ -20,7 +20,7 @@ import { LoggerModule } from 'nestjs-pino';
       isGlobal: true,
       validationSchema: envValidationSchema,
       validationOptions: {
-        // Reporta todos los errores de validación de una vez, no solo el primero.
+        // Report all validation errors at once, not just the first one.
         abortEarly: false,
       },
     }),

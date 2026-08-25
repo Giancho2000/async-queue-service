@@ -8,7 +8,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 describe('JobsService', () => {
   let service: JobsService;
 
-  // --- Mocks de las dependencias ---
+  // --- Dependency mocks ---
   const prismaMock = {
     job: {
       create: jest.fn(),
@@ -29,7 +29,7 @@ describe('JobsService', () => {
   };
 
   beforeEach(async () => {
-    jest.clearAllMocks(); // resetea contadores entre tests
+    jest.clearAllMocks(); // reset call counters between tests
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         JobsService,

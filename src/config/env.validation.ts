@@ -1,10 +1,10 @@
 import * as Joi from 'joi';
 
 /**
- * Esquema de validación de variables de entorno.
+ * Environment variables validation schema.
  *
- * Se valida al arrancar la app (fail-fast): si falta una variable obligatoria
- * o tiene un formato inválido, Nest no levanta y muestra el detalle del error.
+ * Validated at app startup (fail-fast): if a required variable is missing
+ * or has an invalid format, Nest won't boot and shows the error detail.
  */
 export const envValidationSchema = Joi.object({
   // App

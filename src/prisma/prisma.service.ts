@@ -4,11 +4,11 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../generated/prisma/client';
 
 /**
- * Envuelve el PrismaClient generado y lo integra al ciclo de vida de Nest.
+ * Wraps the generated PrismaClient and integrates it into the Nest lifecycle.
  *
- * - Prisma 7 exige un driver adapter: usamos PrismaPg (paquete `pg`).
- * - onModuleInit  -> abre la conexión al arrancar (fail-fast si la BD no responde).
- * - onModuleDestroy -> cierra la conexión limpio en el graceful shutdown.
+ * - Prisma 7 requires a driver adapter: we use PrismaPg (the `pg` package).
+ * - onModuleInit  -> opens the connection at startup (fail-fast if the DB is down).
+ * - onModuleDestroy -> closes the connection cleanly on graceful shutdown.
  */
 @Injectable()
 export class PrismaService
